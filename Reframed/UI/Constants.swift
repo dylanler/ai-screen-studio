@@ -14,7 +14,7 @@ enum Layout {
   static let settingsPadding: CGFloat = 28
   static let labelWidth: CGFloat = 42
 
-  static let regionPopoverWidth: CGFloat = 320
+  static let regionPopoverWidth: CGFloat = 350
   static let regionPopoverSpacing: CGFloat = 4
 
   static let segmentSpacing: CGFloat = 8
