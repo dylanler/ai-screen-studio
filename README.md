@@ -1,10 +1,14 @@
 <p align="center">
-  <img width="64" alt="AppIcon" src="https://github.com/user-attachments/assets/ab90875f-4092-4ca9-b475-9a60b9c6445a" />
+  <img width="64" alt="Reframed AppIcon" src="https://github.com/user-attachments/assets/ab90875f-4092-4ca9-b475-9a60b9c6445a" />
 </p>
 
 # <p align="center">Reframed</p>
 
 macOS screen recorder with a built-in editor. Capture your screen, windows, regions, or iOS devices over USB with webcam overlay, then edit and export.
+
+<p align="center">
+  <img width="1900" alt="Reframed Editor and Menubar" src="https://github.com/user-attachments/assets/33263101-490a-4614-b063-3dd8612df355" />
+</p>
 
 ## Download
 
