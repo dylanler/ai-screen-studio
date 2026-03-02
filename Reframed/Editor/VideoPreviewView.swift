@@ -89,6 +89,16 @@ struct VideoPreviewView: NSViewRepresentable {
     context.coordinator.cameraLayout = $cameraLayout
     context.coordinator.canvasSize = canvasSize
 
+    if let webcam = webcamPlayer {
+      if nsView.webcamPlayerLayer.player !== webcam {
+        nsView.webcamPlayerLayer.player = webcam
+      }
+      nsView.webcamPlayerLayer.isHidden = nsView.currentCameraBackgroundStyle != .none
+    } else {
+      nsView.webcamPlayerLayer.player = nil
+      nsView.webcamPlayerLayer.isHidden = true
+    }
+
     let hiddenRegion = cameraHiddenRegions.first { currentTime >= $0.start && currentTime <= $0.end }
     let isCameraHidden = hiddenRegion != nil
     nsView.isCameraHidden = isCameraHidden
