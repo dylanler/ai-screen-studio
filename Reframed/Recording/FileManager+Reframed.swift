@@ -8,9 +8,7 @@ extension FileManager {
   }
 
   private func timestamp() -> String {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd-HHmmss"
-    return formatter.string(from: Date())
+    formatTimestamp()
   }
 
   func tempRecordingURL() -> URL {

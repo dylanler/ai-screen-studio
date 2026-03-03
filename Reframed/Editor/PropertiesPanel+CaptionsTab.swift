@@ -257,25 +257,17 @@ extension PropertiesPanel {
     }
   }
 
-  @ViewBuilder
   private var captionTextColorPicker: some View {
-    let currentColor = editorState.captionTextColor
     TailwindColorPicker(
-      displayColor: Color(cgColor: currentColor.cgColor),
-      displayName: TailwindColors.all.first(where: { $0.color == currentColor })?.id ?? "Custom",
-      isSelected: { $0.color == currentColor },
-      onSelect: { editorState.captionTextColor = $0.color }
+      color: editorState.captionTextColor,
+      onSelect: { editorState.captionTextColor = $0 }
     )
   }
 
-  @ViewBuilder
   private var captionBgColorPicker: some View {
-    let currentColor = editorState.captionBackgroundColor
     TailwindColorPicker(
-      displayColor: Color(cgColor: currentColor.cgColor),
-      displayName: TailwindColors.all.first(where: { $0.color == currentColor })?.id ?? "Custom",
-      isSelected: { $0.color == currentColor },
-      onSelect: { editorState.captionBackgroundColor = $0.color }
+      color: editorState.captionBackgroundColor,
+      onSelect: { editorState.captionBackgroundColor = $0 }
     )
   }
 

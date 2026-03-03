@@ -49,6 +49,12 @@ func formatTimeRange(start: Double, end: Double) -> String {
   return "\(fmt(start))–\(fmt(end))"
 }
 
+func formatTimestamp(_ date: Date = Date()) -> String {
+  let formatter = DateFormatter()
+  formatter.dateFormat = "yyyy-MM-dd-HHmmss"
+  return formatter.string(from: date)
+}
+
 func formatRelativeTime(_ date: Date) -> String {
   let seconds = Int(-date.timeIntervalSinceNow)
   if seconds < 5 { return "just now" }

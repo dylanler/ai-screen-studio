@@ -74,24 +74,18 @@ extension PropertiesPanel {
   }
 
   var cursorFillColorPicker: some View {
-    let currentName =
-      TailwindColors.all.first { $0.color == editorState.cursorFillColor }?.name ?? "White"
-    return TailwindColorPicker(
-      displayColor: Color(cgColor: editorState.cursorFillColor.cgColor),
-      displayName: currentName,
-      isSelected: { $0.color == editorState.cursorFillColor },
-      onSelect: { editorState.cursorFillColor = $0.color }
+    TailwindColorPicker(
+      color: editorState.cursorFillColor,
+      fallbackName: "White",
+      onSelect: { editorState.cursorFillColor = $0 }
     )
   }
 
   var cursorStrokeColorPicker: some View {
-    let currentName =
-      TailwindColors.all.first { $0.color == editorState.cursorStrokeColor }?.name ?? "Black"
-    return TailwindColorPicker(
-      displayColor: Color(cgColor: editorState.cursorStrokeColor.cgColor),
-      displayName: currentName,
-      isSelected: { $0.color == editorState.cursorStrokeColor },
-      onSelect: { editorState.cursorStrokeColor = $0.color }
+    TailwindColorPicker(
+      color: editorState.cursorStrokeColor,
+      fallbackName: "Black",
+      onSelect: { editorState.cursorStrokeColor = $0 }
     )
   }
 
@@ -123,12 +117,10 @@ extension PropertiesPanel {
   }
 
   var clickColorPickerButton: some View {
-    let currentName = TailwindColors.all.first { $0.color == editorState.clickHighlightColor }?.name ?? "Black"
-    return TailwindColorPicker(
-      displayColor: Color(cgColor: editorState.clickHighlightColor.cgColor),
-      displayName: currentName,
-      isSelected: { $0.color == editorState.clickHighlightColor },
-      onSelect: { editorState.clickHighlightColor = $0.color }
+    TailwindColorPicker(
+      color: editorState.clickHighlightColor,
+      fallbackName: "Black",
+      onSelect: { editorState.clickHighlightColor = $0 }
     )
   }
 

@@ -198,6 +198,7 @@
 		FA10000000000000000000C1 /* EditorState+SpotlightRegions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB10000000000000000000C1 /* EditorState+SpotlightRegions.swift */; };
 		FA10000000000000000000C2 /* TimelineView+SpotlightTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB10000000000000000000C2 /* TimelineView+SpotlightTrack.swift */; };
 		FA10000000000000000000C3 /* SpotlightRegionEditPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB10000000000000000000C3 /* SpotlightRegionEditPopover.swift */; };
+		FA10000000000000000000C4 /* TransitionControlsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB10000000000000000000C4 /* TransitionControlsSection.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -392,6 +393,7 @@
 		FB10000000000000000000C1 /* EditorState+SpotlightRegions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "EditorState+SpotlightRegions.swift"; sourceTree = "<group>"; };
 		FB10000000000000000000C2 /* TimelineView+SpotlightTrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TimelineView+SpotlightTrack.swift"; sourceTree = "<group>"; };
 		FB10000000000000000000C3 /* SpotlightRegionEditPopover.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightRegionEditPopover.swift; sourceTree = "<group>"; };
+		FB10000000000000000000C4 /* TransitionControlsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitionControlsSection.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -569,6 +571,7 @@
 				B1000000000000000000003A /* SliderRow.swift */,
 				FB10000000000000000000D2 /* Dropdown.swift */,
 				B1000000000000000000003B /* TailwindColorPicker.swift */,
+				FB10000000000000000000C4 /* TransitionControlsSection.swift */,
 				B10000000000000000000044 /* SegmentPicker.swift */,
 				B1000000000000000000003D /* Constants.swift */,
 				B10000000000000000000040 /* SettingsShortcutsTab.swift */,
@@ -940,6 +943,7 @@
 				A1000000000000000000003A /* SliderRow.swift in Sources */,
 				FA10000000000000000000D2 /* Dropdown.swift in Sources */,
 				A1000000000000000000003B /* TailwindColorPicker.swift in Sources */,
+				FA10000000000000000000C4 /* TransitionControlsSection.swift in Sources */,
 				A10000000000000000000044 /* SegmentPicker.swift in Sources */,
 				A10000000000000000000045 /* SwatchButton.swift in Sources */,
 				A1000000000000000000003E /* KeyboardShortcut.swift in Sources */,

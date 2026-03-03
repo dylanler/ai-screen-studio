@@ -6,6 +6,30 @@ struct TailwindColorPicker: View {
   let isSelected: (ColorPreset) -> Bool
   let onSelect: (ColorPreset) -> Void
 
+  init(
+    displayColor: Color,
+    displayName: String,
+    isSelected: @escaping (ColorPreset) -> Bool,
+    onSelect: @escaping (ColorPreset) -> Void
+  ) {
+    self.displayColor = displayColor
+    self.displayName = displayName
+    self.isSelected = isSelected
+    self.onSelect = onSelect
+  }
+
+  init(
+    color: CodableColor,
+    fallbackName: String = "Custom",
+    onSelect: @escaping (CodableColor) -> Void
+  ) {
+    let name = TailwindColors.all.first { $0.color == color }?.name ?? fallbackName
+    self.displayColor = Color(cgColor: color.cgColor)
+    self.displayName = name
+    self.isSelected = { $0.color == color }
+    self.onSelect = { onSelect($0.color) }
+  }
+
   var body: some View {
     SelectButton(
       label: displayName,

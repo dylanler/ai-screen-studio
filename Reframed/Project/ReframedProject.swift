@@ -182,8 +182,6 @@ struct ReframedProject: Sendable {
   }
 
   private static func timestamp() -> String {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd-HHmmss"
-    return formatter.string(from: Date())
+    formatTimestamp()
   }
 }

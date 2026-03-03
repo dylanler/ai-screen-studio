@@ -227,13 +227,10 @@ extension PropertiesPanel {
   }
 
   private var borderColorPickerButton: some View {
-    let currentName =
-      TailwindColors.all.first { $0.color == editorState.cameraBorderColor }?.name ?? "White"
-    return TailwindColorPicker(
-      displayColor: Color(cgColor: editorState.cameraBorderColor.cgColor),
-      displayName: currentName,
-      isSelected: { $0.color == editorState.cameraBorderColor },
-      onSelect: { editorState.cameraBorderColor = $0.color }
+    TailwindColorPicker(
+      color: editorState.cameraBorderColor,
+      fallbackName: "White",
+      onSelect: { editorState.cameraBorderColor = $0 }
     )
   }
 }

@@ -113,6 +113,13 @@ final class SessionState {
     }
   }
 
+  private func cleanupCoordinators() {
+    selectionCoordinator?.destroyAll()
+    selectionCoordinator = nil
+    windowSelectionCoordinator?.destroyOverlay()
+    windowSelectionCoordinator = nil
+  }
+
   private func stopCameraPreview() {
     persistentWebcam?.stop()
     persistentWebcam = nil
@@ -297,10 +304,7 @@ final class SessionState {
   }
 
   func cancelSelection() {
-    selectionCoordinator?.destroyAll()
-    selectionCoordinator = nil
-    windowSelectionCoordinator?.destroyOverlay()
-    windowSelectionCoordinator = nil
+    cleanupCoordinators()
     overlayView = nil
     hideStartRecordingOverlay()
     devicePreviewWindow?.close()
@@ -333,10 +337,7 @@ final class SessionState {
     mouseClickMonitor = nil
     cursorMetadataRecorder?.stop()
     cursorMetadataRecorder = nil
-    selectionCoordinator?.destroyAll()
-    selectionCoordinator = nil
-    windowSelectionCoordinator?.destroyOverlay()
-    windowSelectionCoordinator = nil
+    cleanupCoordinators()
     devicePreviewWindow?.close()
     devicePreviewWindow = nil
     deviceCapture?.stop()
@@ -462,8 +463,7 @@ final class SessionState {
 
     SoundEffect.stopRecording.play()
     transition(to: .processing)
-    selectionCoordinator?.destroyAll()
-    selectionCoordinator = nil
+    cleanupCoordinators()
 
     guard let result = try await recordingCoordinator?.stopRecordingRaw(keepWebcamAlive: false) else {
       recordingCoordinator = nil
@@ -580,8 +580,7 @@ final class SessionState {
     let keepWebcam = persistentWebcam != nil
 
     Task {
-      selectionCoordinator?.destroyAll()
-      selectionCoordinator = nil
+      cleanupCoordinators()
       if !keepWebcam {
         webcamPreviewWindow?.close()
         webcamPreviewWindow = nil

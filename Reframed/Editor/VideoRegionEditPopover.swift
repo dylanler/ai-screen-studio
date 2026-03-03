@@ -58,46 +58,11 @@ struct VideoRegionEditPopover: View {
   }
 
   private var transitionControls: some View {
-    VStack(alignment: .leading, spacing: Layout.itemSpacing) {
-      SectionHeader(icon: "arrow.right", title: "Entry Transition")
-
-      SegmentPicker(
-        items: RegionTransitionType.allCases,
-        label: { $0.label },
-        selection: $localEntryTransition
-      )
-
-      if localEntryTransition != .none {
-        SliderRow(
-          label: "Duration",
-          value: $localEntryDuration,
-          range: 0.05...1.0,
-          step: 0.05,
-          formattedValue: String(format: "%.2fs", localEntryDuration)
-        )
-      }
-
-      Divider()
-
-      SectionHeader(icon: "arrow.left", title: "Exit Transition")
-
-      SegmentPicker(
-        items: RegionTransitionType.allCases,
-        label: { $0.label },
-        selection: $localExitTransition
-      )
-
-      if localExitTransition != .none {
-        SliderRow(
-          label: "Duration",
-          value: $localExitDuration,
-          range: 0.05...1.0,
-          step: 0.05,
-          formattedValue: String(format: "%.2fs", localExitDuration)
-        )
-      }
-    }
-    .padding(.horizontal, 12)
-    .padding(.vertical, 4)
+    TransitionControlsSection(
+      entryTransition: $localEntryTransition,
+      entryDuration: $localEntryDuration,
+      exitTransition: $localExitTransition,
+      exitDuration: $localExitDuration
+    )
   }
 }
