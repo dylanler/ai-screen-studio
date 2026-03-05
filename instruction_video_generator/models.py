@@ -26,6 +26,11 @@ class GenerationRequest:
     llm_model: str | None = None
     cloud_mode: BrowserCloudMode = BrowserCloudMode.CLOUD
     cloud_proxy_country_code: str = "us"
+    cloud_proxy_retry_on_challenge: bool = True
+    cloud_proxy_retry_countries: tuple[str, ...] = ("us", "gb", "de", "fr")
+    cloud_custom_proxy_url: str | None = None
+    cloud_custom_proxy_username: str | None = None
+    cloud_custom_proxy_password: str | None = None
     cloud_profile_id: str | None = None
     cloud_fallback_on_challenge: bool = True
     challenge_stuck_threshold: int = 3
@@ -61,6 +66,21 @@ class GenerationRequest:
             raise ValueError("max_actions_per_step must be >= 1")
         if self.challenge_stuck_threshold < 1:
             raise ValueError("challenge_stuck_threshold must be >= 1")
+        proxy_country = self.cloud_proxy_country_code.strip().lower()
+        if len(proxy_country) != 2 or not proxy_country.isalpha():
+            raise ValueError("cloud_proxy_country_code must be a 2-letter country code")
+        if not self.cloud_proxy_retry_countries:
+            raise ValueError("cloud_proxy_retry_countries must not be empty")
+        for value in self.cloud_proxy_retry_countries:
+            code = value.strip().lower()
+            if len(code) != 2 or not code.isalpha():
+                raise ValueError("cloud_proxy_retry_countries must contain 2-letter country codes")
+        if self.cloud_custom_proxy_username and not self.cloud_custom_proxy_url:
+            raise ValueError("cloud_custom_proxy_url is required when cloud_custom_proxy_username is set")
+        if self.cloud_custom_proxy_password and not self.cloud_custom_proxy_url:
+            raise ValueError("cloud_custom_proxy_url is required when cloud_custom_proxy_password is set")
+        if self.cloud_custom_proxy_url is not None and not self.cloud_custom_proxy_url.strip():
+            raise ValueError("cloud_custom_proxy_url must not be empty when provided")
         if self.local_profile_directory is not None and not self.local_profile_directory.strip():
             raise ValueError("local_profile_directory must not be empty when provided")
         if self.viewport_width < 320 or self.viewport_height < 240:

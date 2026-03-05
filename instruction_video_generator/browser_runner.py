@@ -132,15 +132,18 @@ class BrowserAutomationRunner:
         artifacts_dir.mkdir(parents=True, exist_ok=True)
 
         run_mode = self._resolve_initial_mode(request)
-        history, events, video_path = await self._run_once(request, raw_video_dir, run_mode)
-        if (
-            run_mode == "local"
-            and request.cloud_fallback_on_challenge
-            and self.browser_use_api_key
-            and self._has_challenge_block(events, request.challenge_stuck_threshold)
-        ):
-            history, events, video_path = await self._run_once(request, raw_video_dir, "cloud")
-            run_mode = "cloud"
+        if run_mode == "cloud":
+            history, events, video_path = await self._run_cloud_with_proxy_retry(request, raw_video_dir)
+        else:
+            history, events, video_path = await self._run_once(request, raw_video_dir, run_mode)
+            if (
+                run_mode == "local"
+                and request.cloud_fallback_on_challenge
+                and self.browser_use_api_key
+                and self._has_challenge_block(events, request.challenge_stuck_threshold)
+            ):
+                history, events, video_path = await self._run_cloud_with_proxy_retry(request, raw_video_dir)
+                run_mode = "cloud"
 
         history_path = artifacts_dir / "agent_history.json"
         history.save_to_file(history_path)
@@ -164,6 +167,7 @@ class BrowserAutomationRunner:
         request: GenerationRequest,
         raw_video_dir: Path,
         run_mode: str,
+        proxy_country_code: str | None = None,
     ) -> tuple[AgentHistoryList, list[ActionEvent], Path]:
         llm = self.llm_factory.create(request.llm_provider, request.llm_model)
         is_challenge_prone = self._targets_challenge_prone_site(request)
@@ -189,7 +193,10 @@ class BrowserAutomationRunner:
         session_kwargs: dict[str, Any] = {"browser_profile": browser_profile}
         cloud_session_id: str | None = None
         if run_mode == "cloud":
-            cloud_session = await self._create_cloud_session(request)
+            cloud_session = await self._create_cloud_session(
+                request,
+                proxy_country_code=proxy_country_code,
+            )
             cloud_session_id = str(cloud_session.id)
             session_kwargs["cdp_url"] = self._extract_cdp_url_from_live_url(cloud_session.live_url)
             browser_session = BrowserSession(**session_kwargs)
@@ -244,6 +251,47 @@ class BrowserAutomationRunner:
         except RuntimeError:
             video_path = self._build_video_from_history_screenshots(history, raw_video_dir, request)
         return history, events, video_path
+
+    async def _run_cloud_with_proxy_retry(
+        self,
+        request: GenerationRequest,
+        raw_video_dir: Path,
+    ) -> tuple[AgentHistoryList, list[ActionEvent], Path]:
+        if request.cloud_custom_proxy_url:
+            return await self._run_once(request, raw_video_dir, "cloud", proxy_country_code=None)
+
+        proxy_countries = self._build_proxy_country_sequence(request)
+        last_result: tuple[AgentHistoryList, list[ActionEvent], Path] | None = None
+        last_error: Exception | None = None
+        for index, country in enumerate(proxy_countries):
+            try:
+                result = await self._run_once(
+                    request,
+                    raw_video_dir,
+                    "cloud",
+                    proxy_country_code=country,
+                )
+                history, events, video_path = result
+                last_result = (history, events, video_path)
+                has_challenge = self._has_challenge_block(events, request.challenge_stuck_threshold)
+                should_retry = (
+                    request.cloud_proxy_retry_on_challenge
+                    and has_challenge
+                    and (index + 1) < len(proxy_countries)
+                )
+                if should_retry:
+                    continue
+                return result
+            except Exception as exc:
+                last_error = exc
+                if (index + 1) < len(proxy_countries):
+                    continue
+                raise
+        if last_result is not None:
+            return last_result
+        if last_error is not None:
+            raise last_error
+        raise RuntimeError("Cloud run did not return a result")
 
     def _build_task(self, request: GenerationRequest) -> str:
         lines = [
@@ -341,7 +389,11 @@ class BrowserAutomationRunner:
                 streak = 0
         return False
 
-    async def _create_cloud_session(self, request: GenerationRequest):
+    async def _create_cloud_session(
+        self,
+        request: GenerationRequest,
+        proxy_country_code: str | None = None,
+    ):
         if not self.browser_use_api_key:
             raise ValueError("BROWSER_USE_API_KEY is required for cloud sessions")
         try:
@@ -355,10 +407,72 @@ class BrowserAutomationRunner:
         create_fn = getattr(sessions, "create", None) or getattr(sessions, "create_session", None)
         if create_fn is None:
             raise RuntimeError("Unsupported browser-use-sdk: no sessions.create/create_session method")
-        return await create_fn(
-            profile_id=request.cloud_profile_id,
-            proxy_country_code=request.cloud_proxy_country_code,
+        create_kwargs: dict[str, Any] = {
+            "profile_id": request.cloud_profile_id,
+        }
+        custom_proxy = self._build_custom_proxy(request)
+        if custom_proxy is not None:
+            create_kwargs["custom_proxy"] = custom_proxy
+        else:
+            country = self._normalize_country_code(proxy_country_code or request.cloud_proxy_country_code) or "us"
+            create_kwargs["proxy_country_code"] = country
+        return await create_fn(**create_kwargs)
+
+    def _normalize_country_code(self, value: str | None) -> str | None:
+        if not value:
+            return None
+        code = value.strip().lower()
+        if len(code) == 2 and code.isalpha():
+            return code
+        return None
+
+    def _build_proxy_country_sequence(self, request: GenerationRequest) -> list[str]:
+        sequence: list[str] = []
+        primary = self._normalize_country_code(request.cloud_proxy_country_code)
+        if primary:
+            sequence.append(primary)
+        for value in request.cloud_proxy_retry_countries:
+            code = self._normalize_country_code(value)
+            if code and code not in sequence:
+                sequence.append(code)
+        if not sequence:
+            sequence.append("us")
+        return sequence
+
+    def _build_custom_proxy(self, request: GenerationRequest):
+        proxy_url = (request.cloud_custom_proxy_url or "").strip()
+        if not proxy_url:
+            return None
+        try:
+            from browser_use_sdk.types.custom_proxy import CustomProxy
+        except Exception as exc:
+            raise RuntimeError(
+                "browser-use-sdk custom proxy support is unavailable. Upgrade browser-use-sdk."
+            ) from exc
+        host, port, username, password = self._parse_custom_proxy_url(proxy_url)
+        if request.cloud_custom_proxy_username:
+            username = request.cloud_custom_proxy_username
+        if request.cloud_custom_proxy_password:
+            password = request.cloud_custom_proxy_password
+        return CustomProxy(
+            host=host,
+            port=port,
+            username=username,
+            password=password,
         )
+
+    def _parse_custom_proxy_url(self, proxy_url: str) -> tuple[str, int, str | None, str | None]:
+        candidate = proxy_url.strip()
+        if "://" not in candidate:
+            candidate = f"http://{candidate}"
+        parsed = urlparse(candidate)
+        host = parsed.hostname
+        port = parsed.port
+        if not host or port is None:
+            raise ValueError("cloud_custom_proxy_url must include host and port")
+        username = unquote(parsed.username) if parsed.username else None
+        password = unquote(parsed.password) if parsed.password else None
+        return host, int(port), username, password
 
     async def _stop_cloud_session(self, cloud_session_id: str) -> None:
         if not self.browser_use_api_key:
