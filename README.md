@@ -1,109 +1,99 @@
-<p align="center">
-  <img width="64" alt="Reframed AppIcon" src="https://github.com/user-attachments/assets/ab90875f-4092-4ca9-b475-9a60b9c6445a" />
-</p>
+# AI Screen Studio
 
-# <p align="center">Reframed</p>
+AI Screen Studio is an instructional video generator.
 
-<p align="center">
-  <a href="https://github.com/jkuri/Reframed/blob/main/LICENSE"><img src="https://img.shields.io/github/license/jkuri/Reframed?color=34c759&labelColor=black" alt="License" /></a>
-  <img src="https://img.shields.io/badge/platform-macOS_15%2B-cb30e0?labelColor=black " alt="Platform" />
-  <img src="https://img.shields.io/badge/swift-6-08f?labelColor=black" alt="Swift 6" />
-  <img src="https://img.shields.io/github/v/release/jkuri/Reframed?color=fc0&labelColor=black" alt="Latest Release" />
-</p>
+Input: a natural-language prompt (for example: "show me how to create a table in Google Docs").
 
-> Open-source macOS screen recorder and capture editor. A free alternative to Screen Studio - capture your screen, windows, or iOS devices with a webcam overlay, then edit on a timeline with auto-captions and smooth cursor zooms.
+Output: a rendered tutorial video with:
+- browser automation capture (Browser Use local/cloud)
+- conversational narration (OpenAI TTS)
+- timing alignment between video and narration
+- auto zoom/editing for watchable walkthroughs
 
-<p align="center">
-  <img width="100%" alt="Reframed Editor" src="https://github.com/user-attachments/assets/a8c20c27-1251-4c7c-a5f3-8bf01f90e868" />
-</p>
+## Core Flow
 
-## Install
-
-Via `homebrew` (recommended):
-
-```bash
-brew install --cask jkuri/reframed/reframed
-```
-
-Or grab the `.dmg` from [Releases](https://github.com/jkuri/reframed/releases).
-
-## Features
-
-### Recording
-
-- **Four capture modes:** entire screen, single window, custom region, or iOS device via USB. Multi-display support included.
-- **System audio and microphone** capture with real-time level indicators
-- **Webcam overlay** (Picture-in-Picture) that can be hidden while recording
-- **120 Hz cursor tracking** records position and click data independently from video frame rate
-- **`.frm` project bundles** preserve all source recordings and editor state for re-editing
-
-### Video editor
-
-- **Timeline trimming** with independent trim ranges for video, system audio, and microphone
-- **Audio region editing** with per-track volume and mute controls
-- **Noise reduction** powered by [RNNoise](https://github.com/xiph/rnnoise) at adjustable intensity
-- **Background styles:** solid color, gradient presets, or custom image (multiple fill modes)
-- **Canvas aspect ratios** (original, 16:9, 1:1, 4:3, 9:16) plus adjustable padding and corner radius
-- **Webcam PiP** with draggable positioning, corner presets, size/radius/border/shadow/mirror
-- **Webcam background replacement** via person segmentation (blur, solid color, gradient, or custom image)
-- **Camera regions** set webcam visibility per-segment on the timeline (fullscreen, hidden, or custom position) with entry/exit transitions
-- **Video regions** for cutting segments from the timeline
-- **Undo/redo history** and fullscreen preview with scrub
-
-### Cursor
-
-- **Custom cursor styles** with SVG-based designs, adjustable primary and outline colors
-- **Click highlights** and **click sounds** (30 built-in samples across five categories)
-- **Movement smoothing** using spring physics-based interpolation and speed presets
-- **Spotlight effect** dims everything outside a radius around the cursor. Timeline regions control when it's active.
-
-### Zoom & pan
-
-- **Manual keyframes** on the timeline to set zoom level and center point, eased with Hermite interpolation
-- **Auto-zoom** detects cursor click clusters and generates keyframes from dwell time
-- **Cursor-follow mode** keeps the viewport locked to cursor position in real time
-
-### Captions
-
-- **On-device speech-to-text** using [WhisperKit](https://github.com/argmaxinc/WhisperKit) (Apple Silicon) with four model sizes downloaded on first use
-- **Word-level timestamps** with automatic short-segment merging from microphone or system audio
-- **Language selection** with auto-detect option
-- **Caption styling:** font size, weight, position, text/background colors, opacity, words per line
-- **Export as burned-in captions** or SRT/VTT sidecar files
-
-### Export
-
-- **MP4, MOV, or GIF** with H.264, H.265, ProRes 422, and ProRes 4444 codecs
-- **Platform presets** for YouTube, Twitter/X, TikTok, Instagram, Discord, ProRes, and GIF
-- **GIF export** powered by [gifski](https://gif.ski) with quality presets
-- **Configurable FPS and resolution** (Original, 4K, 1080p, 720p)
-- **Parallel multi-core rendering** for faster exports with progress bar and ETA
+1. Browser agent executes the prompt in a real browser session.
+2. Raw browser video is recorded.
+3. Narration script is generated from workflow guidance (not click-by-click literal logs).
+4. Narration audio is synthesized and dynamically time-aligned.
+5. Final composition is rendered with zoom effects and mixed audio.
 
 ## Requirements
 
-- macOS 15.0 or later
-- Screen Recording permission
-- Accessibility permission (for cursor and keystroke capture)
-- Microphone permission (optional, for mic capture)
-- Camera permission (optional, for webcam overlay)
+- Python 3.11+
+- `ffmpeg` and `ffprobe` on PATH
+- API keys in `.env`
 
-## Build
+Required env vars:
+- `OPENAI_API_KEY` (TTS narration)
+- `ANTHROPIC_API_KEY` (default browser agent LLM)
+- `BROWSER_USE_API_KEY` (required for cloud mode)
+
+Optional:
+- `GEMINI_API_KEY`
+- `BROWSER_USE_DEFAULT_PROFILE_ID` (defaults to `536cd6ff-add0-4b96-a4e7-c8794254a4cc` if unset)
+
+## Install
 
 ```bash
-# Debug build
-make build
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e '.[dev]'
+```
 
-# Release build
-make release
+## CLI Usage
 
-# Build and run
-make dev
+```bash
+source .venv/bin/activate
+instruction-video-generator \
+  --instructions "Show me how to create a table in Google Docs" \
+  --provider anthropic \
+  --model claude-sonnet-4-6 \
+  --cloud-mode cloud \
+  --cloud-profile-id 536cd6ff-add0-4b96-a4e7-c8794254a4cc \
+  --output-dir outputs \
+  --job-name gdocs-table-demo
+```
 
-# Create DMG installer
-make dmg
+Important options:
+- `--cloud-mode cloud|local|auto` (default: `cloud`)
+- `--browser-video-speed` (default: `2.0`)
+- `--narration-min-speed` (default: `1.0`)
+- `--narration-max-speed` (default: `2.5`)
 
-# Install to /Applications
-make install
+## Web Chat UI
+
+Run:
+
+```bash
+source .venv/bin/activate
+instruction-video-web --host 127.0.0.1 --port 8010
+```
+
+Open `http://127.0.0.1:8010`.
+
+UI features:
+- prompt chat for generating the next instructional video
+- animated queue states: `Queued`, `Browser Run`, `Narration`, `Render`, `Completed`
+- in-app final video preview
+- default cloud profile ID pre-filled as `536cd6ff-add0-4b96-a4e7-c8794254a4cc`
+
+## Output Structure
+
+Each run writes to `outputs/<job-name>/`:
+- `raw_browser_video/`
+- `artifacts/agent_history.json`
+- `artifacts/action_events.json`
+- `narration/narration_script.txt`
+- `narration/narration.wav`
+- `final/instructional_video.mp4`
+- `manifest.json`
+
+## Tests
+
+```bash
+source .venv/bin/activate
+pytest
 ```
 
 ## License
