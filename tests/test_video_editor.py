@@ -39,3 +39,33 @@ def test_build_video_filter_single_segment():
     assert "[0:v]trim" in filter_complex
     assert "null[vout]" in filter_complex
     assert label == "[vout]"
+
+
+def test_build_target_duration_extends_for_longer_narration():
+    editor = VideoEditor(
+        Settings(
+            openai_api_key=None,
+            anthropic_api_key=None,
+            gemini_api_key=None,
+            browser_use_api_key=None,
+            ffmpeg_bin="ffmpeg",
+            ffprobe_bin="ffprobe",
+        )
+    )
+    target = editor.build_target_duration(video_duration=8.0, audio_duration=12.0)
+    assert abs(target - 13.1) < 1e-6
+
+
+def test_build_target_duration_preserves_longer_video():
+    editor = VideoEditor(
+        Settings(
+            openai_api_key=None,
+            anthropic_api_key=None,
+            gemini_api_key=None,
+            browser_use_api_key=None,
+            ffmpeg_bin="ffmpeg",
+            ffprobe_bin="ffprobe",
+        )
+    )
+    target = editor.build_target_duration(video_duration=20.0, audio_duration=12.0)
+    assert abs(target - 20.0) < 1e-6

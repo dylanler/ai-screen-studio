@@ -2,6 +2,11 @@
 
 AI Screen Studio is an instructional video generator.
 
+At a glance:
+- AI Screen Studio turns a natural-language prompt into a rendered instructional video by running browser automation, generating conversational narration, and compositing a guided walkthrough.
+- The pipeline records a real browser session, writes narration from workflow guidance rather than literal click logs, and synchronizes the audio with the captured video.
+- The project supports both CLI and web chat UI workflows, with Browser Use local/cloud execution, queue-stage feedback, and final video output under `outputs/<job-name>/`.
+
 Input: a natural-language prompt (for example: "show me how to create a table in Google Docs").
 
 Output: a rendered tutorial video with:
@@ -15,8 +20,8 @@ Output: a rendered tutorial video with:
 1. Browser agent executes the prompt in a real browser session.
 2. Raw browser video is recorded.
 3. Narration script is generated from workflow guidance (not click-by-click literal logs).
-4. Narration audio is synthesized and dynamically time-aligned.
-5. Final composition is rendered with zoom effects and mixed audio.
+4. Narration audio is synthesized at `1.0x` to `2.5x` speed, and it only speeds up when needed to fit a short video window.
+5. Final composition is rendered with zoom effects, mixed audio, and video padding so narration is never cut off.
 
 ## Requirements
 
@@ -57,7 +62,7 @@ instruction-video-generator \
 
 Important options:
 - `--cloud-mode cloud|local|auto` (default: `cloud`)
-- `--browser-video-speed` (default: `2.0`)
+- `--browser-video-speed` (default: `2.0`, raw browser capture is sped up before final render)
 - `--narration-min-speed` (default: `1.0`)
 - `--narration-max-speed` (default: `2.5`)
 
@@ -74,6 +79,7 @@ Open `http://127.0.0.1:8010`.
 
 UI features:
 - prompt chat for generating the next instructional video
+- multiline instruction composer for long paragraph prompts
 - animated queue states: `Queued`, `Browser Run`, `Narration`, `Render`, `Completed`
 - in-app final video preview
 - default cloud profile ID pre-filled as `536cd6ff-add0-4b96-a4e7-c8794254a4cc`

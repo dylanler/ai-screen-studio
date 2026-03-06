@@ -31,3 +31,12 @@ def test_get_missing_job_returns_404():
         response = client.get("/api/jobs/missing-id")
 
     assert response.status_code == 404
+
+
+def test_index_contains_multiline_prompt_composer():
+    with TestClient(webapp.app) as client:
+        response = client.get("/")
+
+    assert response.status_code == 200
+    assert '<textarea id="promptInput"' in response.text
+    assert webapp.DEFAULT_CLOUD_PROFILE_ID in response.text

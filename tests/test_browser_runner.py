@@ -129,3 +129,12 @@ def test_build_task_google_docs_layout_playbook():
     task = runner._build_task(request)
     assert "For Google Docs layout requests" in task
     assert "File > Page setup." in task
+
+
+def test_build_task_adobe_combine_pdf_playbook():
+    runner = _runner(with_key=True)
+    request = _request("How to combine pdf at https://acrobat.adobe.com/link/acrobat/combine-pdf")
+    task = runner._build_task(request)
+    assert "For Adobe Acrobat Combine PDF requests" in task
+    assert "Do not search the web or open Wikipedia" in task
+    assert "write_file with non-empty markdown content and a .pdf filename" in task

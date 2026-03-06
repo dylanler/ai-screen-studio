@@ -133,10 +133,11 @@ class NarrationService:
                 )
                 duration_seconds = self._probe_duration(output_path)
 
-        if target_duration_seconds > 0:
-            delta = abs(duration_seconds - target_duration_seconds)
-            if delta > 0.03:
-                tempo_factor = duration_seconds / target_duration_seconds
+        if target_duration_seconds > 0 and duration_seconds > target_duration_seconds * 1.02:
+            tempo_factor = duration_seconds / target_duration_seconds
+            max_tempo_factor = max_speed / max(speed_used, 1e-6)
+            tempo_factor = min(tempo_factor, max_tempo_factor)
+            if tempo_factor > 1.01:
                 self._retime_audio(output_path, tempo_factor)
                 duration_seconds = self._probe_duration(output_path)
 
@@ -390,11 +391,14 @@ class NarrationService:
         min_speed: float,
         max_speed: float,
     ) -> float:
+        bounded_current = max(min_speed, min(max_speed, current_speed))
         if current_audio_duration <= 0 or target_duration <= 0:
-            return max(min_speed, min(max_speed, current_speed))
+            return bounded_current
+        if current_audio_duration <= target_duration:
+            return bounded_current
         ratio = current_audio_duration / target_duration
-        proposed = current_speed * ratio
-        return max(min_speed, min(max_speed, proposed))
+        proposed = bounded_current * ratio
+        return min(max_speed, max(bounded_current, proposed))
 
     def _probe_duration(self, media_path: Path) -> float:
         command = [

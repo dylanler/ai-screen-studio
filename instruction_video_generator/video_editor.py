@@ -30,6 +30,8 @@ class VideoEditor:
     def __init__(self, settings: Settings, zoom_factor: float = 1.14):
         self.settings = settings
         self.zoom_factor = zoom_factor
+        self.end_padding_seconds = 0.35
+        self.narration_safety_seconds = 0.75
 
     def render(
         self,
@@ -41,28 +43,35 @@ class VideoEditor:
         final_dir = job_dir / "final"
         final_dir.mkdir(parents=True, exist_ok=True)
         output_path = final_dir / "instructional_video.mp4"
-        end_padding_seconds = 0.35
-        audio_duration = self.probe_duration(narration_artifacts.audio_path)
+        audio_duration = max(
+            narration_artifacts.duration_seconds or 0.0,
+            self.probe_duration(narration_artifacts.audio_path),
+        )
         normalized_video_path = self.normalize_video_geometry(
             browser_artifacts.video_path,
             request.viewport_width,
             request.viewport_height,
             final_dir / "normalized-video.mp4",
         )
+        base_video_duration = self.probe_duration(normalized_video_path)
+        target_duration = self.build_target_duration(
+            video_duration=base_video_duration,
+            audio_duration=audio_duration,
+        )
         prepared_video_path = self.extend_video_to_duration(
             normalized_video_path,
-            audio_duration + end_padding_seconds,
+            target_duration,
             final_dir / "prepared-video.mp4",
         )
-        duration = self.probe_duration(prepared_video_path)
-        target_duration = max(duration, audio_duration + end_padding_seconds)
+        prepared_duration = self.probe_duration(prepared_video_path)
+        final_duration = max(prepared_duration, target_duration)
         width, height = self.probe_geometry(prepared_video_path)
         action_points = self._relative_action_points(
             browser_artifacts.events,
             time_scale=request.browser_video_speed,
         )
         segments = self.build_segments(
-            duration=duration,
+            duration=final_duration,
             action_points=action_points,
             zoom_level=request.auto_zoom_level,
             dwell_threshold=request.auto_zoom_dwell_threshold,
@@ -99,17 +108,23 @@ class VideoEditor:
             "-b:a",
             "192k",
             "-af",
-            f"apad=pad_dur={target_duration:.3f},loudnorm=I=-16:LRA=11:TP=-1.5",
+            f"apad=whole_dur={final_duration:.3f},loudnorm=I=-16:LRA=11:TP=-1.5",
             "-t",
-            f"{target_duration:.3f}",
+            f"{final_duration:.3f}",
             str(output_path),
         ]
         self.run_command(command)
         return VideoEditArtifacts(
             final_video_path=output_path,
             segments=segments,
-            duration_seconds=duration,
+            duration_seconds=final_duration,
             ffmpeg_command=command,
+        )
+
+    def build_target_duration(self, video_duration: float, audio_duration: float) -> float:
+        return max(
+            video_duration,
+            audio_duration + self.end_padding_seconds + self.narration_safety_seconds,
         )
 
     def speed_adjust_video(

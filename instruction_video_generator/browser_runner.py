@@ -326,6 +326,16 @@ class BrowserAutomationRunner:
                     "Do not redirect to support/help pages for this request.",
                 ]
             )
+        if self._is_adobe_combine_pdf_request(request):
+            lines.extend(
+                [
+                    "For Adobe Acrobat Combine PDF requests, stay inside Adobe's real product flow.",
+                    "Open the Acrobat combine-files page and demonstrate the upload/combine workflow directly in the product UI.",
+                    "Do not search the web or open Wikipedia, help articles, or unrelated pages.",
+                    "If sample PDFs are needed, use write_file with non-empty markdown content and a .pdf filename so Browser Use creates valid PDF files, then upload those PDFs.",
+                    "Stop once the files are visibly loaded in the combine workflow and the combine action is available, or once the combined result is shown.",
+                ]
+            )
         lines.append(f"User instructions:\n{request.instructions.strip()}")
         if request.start_url:
             lines.append(f"Start URL: {request.start_url.strip()}")
@@ -354,6 +364,12 @@ class BrowserAutomationRunner:
         has_docs = "google doc" in text or "docs.google.com" in text
         has_table = "table" in text and ("create" in text or "insert" in text or "add" in text)
         return has_docs and has_table
+
+    def _is_adobe_combine_pdf_request(self, request: GenerationRequest) -> bool:
+        scope = f"{request.instructions} {request.start_url or ''}".lower()
+        has_adobe = "acrobat.adobe.com" in scope or "adobe acrobat" in scope or "adobe" in scope
+        has_combine = "combine pdf" in scope or "combine files" in scope
+        return has_adobe and has_combine
 
     def _resolve_initial_mode(self, request: GenerationRequest) -> str:
         if request.cloud_mode == BrowserCloudMode.CLOUD:

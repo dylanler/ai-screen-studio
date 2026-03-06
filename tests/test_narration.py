@@ -129,6 +129,74 @@ def test_compute_dynamic_speed_clamps_to_bounds():
     assert speed_slow == 1.0
 
 
+def test_compute_dynamic_speed_never_slows_down_requested_speed():
+    service = NarrationService(
+        Settings(
+            openai_api_key="test",
+            anthropic_api_key=None,
+            gemini_api_key=None,
+            browser_use_api_key=None,
+            ffmpeg_bin="ffmpeg",
+            ffprobe_bin="ffprobe",
+        )
+    )
+    speed = service._compute_dynamic_speed(
+        current_speed=1.4,
+        current_audio_duration=3.0,
+        target_duration=10.0,
+        min_speed=1.0,
+        max_speed=2.5,
+    )
+    assert speed == 1.4
+
+
+def test_generate_audio_with_dynamic_speed_does_not_slow_or_retime_short_audio(tmp_path, monkeypatch):
+    service = NarrationService(
+        Settings(
+            openai_api_key="test",
+            anthropic_api_key=None,
+            gemini_api_key=None,
+            browser_use_api_key=None,
+            ffmpeg_bin="ffmpeg",
+            ffprobe_bin="ffprobe",
+        )
+    )
+    output_path = tmp_path / "narration.wav"
+    generated_speeds: list[float] = []
+    retime_calls: list[float] = []
+
+    def fake_generate_audio(*, script_text, output_path, voice, model, speed):
+        generated_speeds.append(speed)
+        output_path.write_bytes(b"fake")
+
+    def fake_probe_duration(_path):
+        return 4.0
+
+    def fake_retime_audio(_path, tempo_factor):
+        retime_calls.append(tempo_factor)
+
+    monkeypatch.setattr(service, "generate_audio", fake_generate_audio)
+    monkeypatch.setattr(service, "_probe_duration", fake_probe_duration)
+    monkeypatch.setattr(service, "_retime_audio", fake_retime_audio)
+
+    script_text, speed_used, duration_seconds = service.generate_audio_with_dynamic_speed(
+        script_text="Short narration",
+        output_path=output_path,
+        voice="alloy",
+        model="gpt-4o-mini-tts",
+        requested_speed=1.0,
+        min_speed=1.0,
+        max_speed=2.5,
+        target_duration_seconds=10.0,
+    )
+
+    assert script_text == "Short narration"
+    assert speed_used == 1.0
+    assert duration_seconds == 4.0
+    assert generated_speeds == [1.0]
+    assert retime_calls == []
+
+
 def test_build_atempo_filters_splits_large_tempo():
     service = NarrationService(
         Settings(

@@ -339,16 +339,21 @@ def _html_template() -> str:
   <link href=\"https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">
   <style>
     :root {
-      --bg: #f6f7f2;
-      --card: #ffffff;
-      --ink: #122025;
-      --muted: #5d6f78;
+      --bg: #f2f4ef;
+      --card: rgba(255, 255, 255, 0.88);
+      --card-solid: #ffffff;
+      --ink: #102126;
+      --muted: #61737a;
+      --muted-strong: #42565d;
       --brand: #0d9f8f;
+      --brand-deep: #0d5c64;
       --brand-2: #ff7f3f;
       --ok: #1e8f4a;
       --warn: #db5d3b;
-      --line: #d7dedf;
-      --shadow: 0 14px 34px rgba(18, 32, 37, 0.12);
+      --line: rgba(16, 33, 38, 0.12);
+      --line-strong: rgba(16, 33, 38, 0.18);
+      --panel-shadow: 0 28px 60px rgba(16, 33, 38, 0.10);
+      --soft-shadow: 0 12px 30px rgba(16, 33, 38, 0.08);
     }
 
     * { box-sizing: border-box; }
@@ -359,165 +364,267 @@ def _html_template() -> str:
       font-family: 'Space Grotesk', sans-serif;
       color: var(--ink);
       background:
-        radial-gradient(circle at 10% 20%, rgba(13, 159, 143, 0.12), transparent 36%),
-        radial-gradient(circle at 90% 5%, rgba(255, 127, 63, 0.10), transparent 30%),
+        linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.18)),
+        radial-gradient(circle at 0% 0%, rgba(13, 159, 143, 0.18), transparent 34%),
+        radial-gradient(circle at 100% 0%, rgba(255, 127, 63, 0.14), transparent 30%),
+        radial-gradient(circle at 50% 100%, rgba(13, 92, 100, 0.10), transparent 28%),
         var(--bg);
     }
 
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.3;
+      background-image:
+        linear-gradient(rgba(16, 33, 38, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16, 33, 38, 0.03) 1px, transparent 1px);
+      background-size: 24px 24px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.55), transparent 85%);
+    }
+
     .shell {
-      max-width: 1280px;
+      max-width: 1380px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 28px;
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 20px;
+      grid-template-columns: minmax(0, 1.08fr) minmax(380px, 0.92fr);
+      gap: 22px;
+      min-height: 100vh;
     }
 
     .panel {
       background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: 26px;
+      box-shadow: var(--panel-shadow);
       overflow: hidden;
+      backdrop-filter: blur(18px);
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 56px);
     }
 
     .panel-header {
-      padding: 16px 18px;
+      padding: 18px 22px;
       border-bottom: 1px solid var(--line);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: linear-gradient(90deg, rgba(13,159,143,0.08), rgba(255,127,63,0.06));
+      background:
+        linear-gradient(120deg, rgba(13,159,143,0.10), rgba(255,127,63,0.08)),
+        rgba(255,255,255,0.68);
     }
 
     h1 {
       margin: 0;
-      font-size: 1rem;
-      letter-spacing: 0.02em;
+      font-size: 1.02rem;
+      letter-spacing: 0.03em;
     }
 
     .meta {
-      color: var(--muted);
+      color: var(--muted-strong);
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.75rem;
+      text-transform: lowercase;
     }
 
     .chat-log {
-      height: 58vh;
+      flex: 1;
       overflow: auto;
-      padding: 22px 20px;
-      display: grid;
-      align-content: start;
-      gap: 14px;
-      background: linear-gradient(180deg, rgba(13,159,143,0.02), transparent 25%);
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background:
+        radial-gradient(circle at top left, rgba(13,159,143,0.06), transparent 35%),
+        linear-gradient(180deg, rgba(255,255,255,0.54), rgba(255,255,255,0.18));
     }
 
     .bubble {
-      width: fit-content;
-      max-width: min(72%, 540px);
-      padding: 13px 15px;
-      border-radius: 16px;
-      font-size: 0.95rem;
-      line-height: 1.45;
-      box-shadow: 0 8px 20px rgba(18, 32, 37, 0.08);
+      width: min(100%, 58ch);
+      padding: 15px 17px;
+      border-radius: 18px;
+      font-size: 0.96rem;
+      line-height: 1.55;
+      box-shadow: var(--soft-shadow);
       animation: bubbleIn 0.24s ease-out;
     }
 
     .bubble.user {
-      justify-self: end;
-      max-width: min(66%, 500px);
-      background: #0f2f3a;
+      align-self: flex-end;
+      background: linear-gradient(140deg, #0f3240, #164957);
       color: #eff7fa;
-      border-bottom-right-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-bottom-right-radius: 8px;
     }
 
     .bubble.assistant {
-      justify-self: start;
-      max-width: min(70%, 560px);
-      background: #eef4f4;
+      align-self: flex-start;
+      background: rgba(247, 249, 248, 0.95);
       border: 1px solid var(--line);
-      border-bottom-left-radius: 6px;
+      border-bottom-left-radius: 8px;
     }
 
     .controls {
       border-top: 1px solid var(--line);
-      padding: 14px;
+      padding: 18px 20px 20px;
       display: grid;
-      gap: 10px;
-      background: #fbfcfa;
+      gap: 14px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.94)),
+        #fbfcfa;
+    }
+
+    .composer-card {
+      border: 1px solid rgba(13, 159, 143, 0.16);
+      border-radius: 20px;
+      padding: 16px;
+      background:
+        linear-gradient(160deg, rgba(13,159,143,0.08), rgba(255,255,255,0.78) 35%, rgba(255,127,63,0.06));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+      display: grid;
+      gap: 12px;
+    }
+
+    .composer-head {
+      display: grid;
+      gap: 4px;
+    }
+
+    .composer-kicker {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--brand-deep);
+    }
+
+    .composer-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .composer-note {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
     }
 
     .input-row {
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: stretch;
     }
 
-    input[type=\"text\"], select {
+    input[type=\"text\"], select, textarea {
       width: 100%;
       border: 1px solid #bfd0d3;
-      border-radius: 10px;
+      border-radius: 14px;
       font: inherit;
-      padding: 10px 12px;
-      background: #fff;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.96);
       color: var(--ink);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    }
+
+    textarea {
+      min-height: 148px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    input[type=\"text\"]:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(13, 159, 143, 0.52);
+      box-shadow: 0 0 0 4px rgba(13, 159, 143, 0.12);
+      transform: translateY(-1px);
     }
 
     .btn {
       border: 0;
-      border-radius: 10px;
-      padding: 0 16px;
+      border-radius: 16px;
+      padding: 0 20px;
+      min-width: 128px;
       font: inherit;
       font-weight: 700;
       cursor: pointer;
       color: #fff;
-      background: linear-gradient(120deg, var(--brand), #0a7e80);
-      transition: transform 0.18s ease, filter 0.18s ease;
+      background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+      box-shadow: 0 14px 26px rgba(13, 92, 100, 0.22);
+      transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+      align-self: end;
     }
 
-    .btn:hover { transform: translateY(-1px); filter: brightness(1.04); }
+    .btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.04);
+      box-shadow: 0 18px 30px rgba(13, 92, 100, 0.28);
+    }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .settings-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
+      gap: 10px;
     }
 
     .settings-grid label {
       display: grid;
       gap: 6px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--muted);
     }
 
+    .input-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .shortcut {
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--muted-strong);
+    }
+
     .queue {
-      padding: 14px;
+      padding: 18px;
       display: grid;
-      gap: 10px;
+      gap: 12px;
+      align-content: start;
+      flex: 1;
+      overflow: auto;
+      background: linear-gradient(180deg, rgba(255,255,255,0.24), transparent 20%);
     }
 
     .queue-item {
       border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: #fff;
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.92);
       position: relative;
       overflow: hidden;
       transition: border-color 0.2s ease, background 0.2s ease;
+      box-shadow: 0 10px 22px rgba(16, 33, 38, 0.04);
     }
 
     .queue-item .label {
       font-weight: 700;
-      font-size: 0.88rem;
+      font-size: 0.92rem;
     }
 
     .queue-item .desc,
     .queue-item .detail {
       color: var(--muted);
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       margin-top: 4px;
-      line-height: 1.35;
+      line-height: 1.4;
     }
 
     .queue-item.pending { opacity: 0.66; }
@@ -551,18 +658,20 @@ def _html_template() -> str:
 
     .video-wrap {
       border-top: 1px solid var(--line);
-      padding: 14px;
+      padding: 18px;
       display: grid;
-      gap: 8px;
-      background: #f8faf9;
+      gap: 10px;
+      background:
+        linear-gradient(180deg, rgba(248,250,249,0.96), rgba(255,255,255,0.92));
     }
 
     video {
       width: 100%;
-      border-radius: 12px;
+      border-radius: 18px;
       border: 1px solid #c9d6d8;
       background: #0b0f12;
-      max-height: 320px;
+      max-height: 360px;
+      box-shadow: var(--soft-shadow);
     }
 
     .path {
@@ -591,17 +700,33 @@ def _html_template() -> str:
         grid-template-columns: 1fr;
         padding: 14px;
       }
+      .panel {
+        min-height: auto;
+      }
       .chat-log {
-        height: 44vh;
+        min-height: 34vh;
         padding: 14px;
       }
       .bubble,
       .bubble.user,
       .bubble.assistant {
-        max-width: 88%;
+        width: min(100%, 88%);
       }
       .settings-grid {
         grid-template-columns: 1fr;
+      }
+      .input-row {
+        grid-template-columns: 1fr;
+      }
+      .btn {
+        min-height: 52px;
+      }
+      textarea {
+        min-height: 180px;
+      }
+      .input-footer {
+        flex-direction: column;
+        align-items: flex-start;
       }
     }
   </style>
@@ -637,9 +762,20 @@ def _html_template() -> str:
             <input id=\"cloudProfile\" type=\"text\" value=\"__DEFAULT_PROFILE_ID__\" />
           </label>
         </div>
-        <div class=\"input-row\">
-          <input id=\"promptInput\" type=\"text\" placeholder=\"Ask for the next instructional video...\" required />
-          <button class=\"btn\" id=\"sendBtn\" type=\"submit\">Generate</button>
+        <div class=\"composer-card\">
+          <div class=\"composer-head\">
+            <div class=\"composer-kicker\">Instruction Prompt</div>
+            <div class=\"composer-title\">Describe the walkthrough in full sentences.</div>
+            <div class=\"composer-note\">Paste long step-by-step instructions, URLs, constraints, and account context. The generator will turn it into a narrated instructional video.</div>
+          </div>
+          <div class=\"input-row\">
+            <textarea id=\"promptInput\" placeholder=\"Example: Open the Adobe Acrobat combine files page, upload the two PDFs from Downloads, reorder the second file above the first, click Combine, then show where the merged file can be downloaded.\" required></textarea>
+            <button class=\"btn\" id=\"sendBtn\" type=\"submit\">Generate</button>
+          </div>
+          <div class=\"input-footer\">
+            <span>Long prompts are supported. Use the full paragraph if the walkthrough needs precise behavior.</span>
+            <span class=\"shortcut\">Ctrl/Cmd + Enter to generate</span>
+          </div>
         </div>
       </form>
     </section>
@@ -761,6 +897,13 @@ def _html_template() -> str:
         addMessage('assistant', `Failed to start generation: ${err.message}`);
       } finally {
         sendBtn.disabled = false;
+      }
+    });
+
+    promptInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        promptForm.requestSubmit();
       }
     });
 
